@@ -95,7 +95,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .note{color:var(--muted);font-size:12.5px;margin:0}
 .example{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
 textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 @media (max-width:480px){.split{grid-template-columns:1fr}}
 .prog{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--surface-2);border-top:5px solid var(--pc)}
 .prog.off{opacity:.55}
@@ -110,14 +110,25 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
 .prog .items div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .prog .items span:last-child{white-space:nowrap;font-weight:600;color:var(--ink)}
 .splitnote{margin:10px 0 0;color:var(--muted);font-size:12.5px}
+.prog .pnote{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);line-height:1.4}
+.info{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:none;border-radius:50%;border:2px solid #d72229;color:#d72229;background:var(--surface);font:700 12px/1 var(--body);cursor:pointer;margin-left:6px;padding:0;vertical-align:middle}
+.info:hover{background:#fdeceb}
+#infopop{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px}
+#infopop[hidden]{display:none}
+#infopop .ipbox{position:relative;background:var(--surface);color:var(--ink);border:2px solid #d72229;border-radius:12px;max-width:420px;width:100%;padding:18px 20px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#infopop h4{font-family:var(--display);font-size:22px;margin:0 30px 8px 0;line-height:1.15}
+#infopop p{margin:0 0 8px;font-size:15px;line-height:1.5}
+#infopop .ipx{position:absolute;top:8px;right:10px;border:0;background:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;padding:4px}
 .minibar{display:none}
 @media (max-width:860px){.minibar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;
   background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 14px rgba(0,0,0,.08)}
- .minibar #m-split{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+ .minibar #m-split{flex:1;min-width:0;font-size:12px;line-height:1.35;color:var(--muted);font-variant-numeric:tabular-nums}
+ .minibar b{white-space:nowrap}
  .minibar b{font-family:var(--display);font-size:26px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
  .minibar a{font-weight:600;color:var(--accent-ink);text-decoration:none}
  .wrap{padding-bottom:90px}}
 @media (prefers-reduced-motion:reduce){.arrow .bar{transition:none}}
+@media (max-width:440px){.minibar a{display:none}}
 .foot{max-width:1180px;margin:0 auto;padding:0 20px 90px;color:var(--muted);font-size:12.5px;line-height:1.5}
 .foot b{color:var(--ink)}
 </style>
@@ -153,9 +164,9 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
         <div class="hints" id="hints"></div>
       </div>
       <div class="card" id="splitcard">
-        <h3>KfW und BAFA getrennt</h3>
+        <h3>Förderung nach Bereichen getrennt</h3>
         <div class="split" id="split"></div>
-        <p class="splitnote">Zwei getrennte Förderprogramme mit eigenem Antrag. Wird nur eine Maßnahme umgesetzt, gilt nur deren Spalte.</p>
+        <p class="splitnote">Drei getrennte Bereiche: KfW (Heizung), BAFA-Einzelmaßnahmen (Hülle) und die Förderung von Energieberatung &amp; Fachplanung. Wird nur eine Maßnahme umgesetzt, gilt nur deren Spalte.</p>
       </div>
       <div class="card">
         <div class="actions">
@@ -170,6 +181,7 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
   </div>
 </div>
 <footer class="foot"><b>Kron Energieberatung</b> · Yannick Kron · Wiesgarten 1 · 97450 Arnstein · 0151 11541830 · info@energieberatung-kron.de<br>Datenschutz: Alle Eingaben bleiben auf diesem Gerät gespeichert und werden nicht übertragen. Diese Seite lädt keine externen Inhalte.</footer>
+<div id="infopop" hidden role="dialog" aria-modal="true" aria-labelledby="ip-t"><div class="ipbox"><button type="button" class="ipx" aria-label="Schließen">×</button><h4 id="ip-t"></h4><div id="ip-b"></div></div></div>
 <div class="minibar"><span id="m-split"></span><span>Zuschuss <b id="m-total">–</b></span><a href="#ergebnis">Details ansehen</a></div>
 <script>
 // Förderlogik BEG EM (Richtlinie 17.08.2026) – wird in die Seite eingebettet
@@ -239,12 +251,13 @@ function berechne(i) {
     { key: "isfp", name: "Energieberatung (iSFP)", stelle: "BAFA", kosten: ke, foerderf: ke, zuschuss: zE },
   ];
   const std = { heizung: satzSelbst, huelle: P.huelle, baubegl: P.baubegl, isfp: P.ebw };
-  for (const p of pos) p.satz = p.foerderf > 0 ? p.zuschuss / p.foerderf : std[p.key];
-  const grp = st => { const ps = pos.filter(p => p.stelle === st), k = ps.reduce((a, p) => a + p.kosten, 0), f = ps.reduce((a, p) => a + p.foerderf, 0), z = ps.reduce((a, p) => a + p.zuschuss, 0);
+  const GR = { heizung: "kfw", huelle: "em", baubegl: "eb", isfp: "eb" };
+  for (const p of pos) { p.gruppe = GR[p.key]; p.satz = p.foerderf > 0 ? p.zuschuss / p.foerderf : std[p.key]; }
+  const grp = st => { const ps = pos.filter(p => p.gruppe === st), k = ps.reduce((a, p) => a + p.kosten, 0), f = ps.reduce((a, p) => a + p.foerderf, 0), z = ps.reduce((a, p) => a + p.zuschuss, 0);
     return { pos: ps, kosten: k, foerderf: f, zuschuss: z, eigen: k - z, quote: k ? z / k : 0, satz: f ? z / f : 0 }; };
-  const kfw = grp("KfW"), bafa = grp("BAFA");
+  const kfw = grp("kfw"), em = grp("em"), eb = grp("eb");
   const kosten = pos.reduce((a, p) => a + p.kosten, 0), zuschuss = pos.reduce((a, p) => a + p.zuschuss, 0);
-  return { pos, kfw, bafa, kosten, zuschuss, eigen: kosten - zuschuss, heiz: { grund, klima, eink, cap, satzSelbst, hg, anteil, wp, ab2027 },
+  return { pos, kfw, em, eb, kosten, zuschuss, eigen: kosten - zuschuss, heiz: { grund, klima, eink, cap, satzSelbst, hg, anteil, wp, ab2027 },
            huelle: { hgO, hgM, isfpOk, zIsfp, zWpb }, hinweise };
 }
 function eur(x) { return Math.round(x).toLocaleString("de-DE") + " €"; }
@@ -346,23 +359,23 @@ function foerderPdf(r, s, logo) {
   d.text("Ihre voraussichtliche Förderung", L, y, { size: 19, bold: true }); y += 6.5;
   d.text("Unverbindliche Schätzung nach BEG-EM-Richtlinie vom 17.08.2026 · Antragsdatum " + fmtD(s.datum), L, y, { size: 9, color: C.muted }); y += 7;
 
-  // Kennzahlen: KfW und BAFA getrennt
+  // Kennzahlen: drei Bereiche getrennt
+  const GRUPPEN = [[r.kfw, "KfW", "Heizungstausch", C.e[0]], [r.em, "BAFA", "Einzelmaßnahmen Hülle", C.e[1]], [r.eb, "Beratung", "Energieberatung & Fachplanung", C.e[4]]];
   const tile = (g, x, w, titel, sub, col) => {
-    const on = g.kosten > 0, th = 38;
+    const th = 44;
     d.rect(x, y, w, th, C.soft); d.rect(x, y, w, 1.6, col);
-    d.text(titel, x + 5, y + 8.5, { size: 13, bold: true }); d.text(sub, x + 5 + tw(titel, 13, true) / MM + 2.5, y + 8.5, { size: 8.5, color: C.muted });
-    if (!on) { d.text("Keine Maßnahme geplant", x + 5, y + 20, { size: 11, color: C.muted }); return; }
-    d.text("Voraussichtlicher Zuschuss", x + 5, y + 14.5, { size: 8, color: C.muted });
-    d.text(eur(g.zuschuss), x + 5, y + 24, { size: 20, bold: true, color: C.green });
-    d.text("Fördersatz " + pz(g.satz), x + w - 5, y + 24, { size: 11, bold: true, align: "right" });
-    d.text("Kosten " + eur(g.kosten) + "  ·  Eigenanteil " + eur(g.eigen) + "  ·  Quote " + pz(g.quote), x + 5, y + 32.5, { size: 8.5, color: C.muted });
+    d.text(titel, x + 4, y + 8.5, { size: 12, bold: true }); d.text(sub, x + 4, y + 13, { size: 7.5, color: C.muted });
+    if (!(g.kosten > 0)) { d.text("Keine Maßnahme geplant", x + 4, y + 25, { size: 9.5, color: C.muted }); return; }
+    d.text(eur(g.zuschuss), x + 4, y + 23.5, { size: 17, bold: true, color: C.green });
+    d.text("Fördersatz " + pz(g.satz), x + 4, y + 30, { size: 9.5, bold: true });
+    d.text("Kosten " + eur(g.kosten), x + 4, y + 35.5, { size: 8, color: C.muted });
+    d.text("Eigenanteil " + eur(g.eigen), x + 4, y + 40, { size: 8, color: C.muted });
   };
-  const tw2 = (W - 6) / 2;
-  tile(r.kfw, L, tw2, "KfW", "Heizungstausch", C.e[0]);
-  tile(r.bafa, L + tw2 + 6, tw2, "BAFA", "Hülle · Baubegleitung · iSFP", C.e[4]);
-  y += 44;
-  if (r.kfw.kosten > 0 && r.bafa.kosten > 0) {
-    d.wrap("Zwei getrennte Förderprogramme mit eigenem Antrag. Nur wenn beide umgesetzt werden: Kosten " + eur(r.kosten) + " · Zuschuss " + eur(r.zuschuss) + " · Eigenanteil " + eur(r.eigen) + ".", W, 8.5).forEach(l => { d.text(l, L, y, { size: 8.5, color: C.muted }); y += 4; });
+  const tw3 = (W - 8) / 3;
+  GRUPPEN.forEach(([g, t, sb, c], i) => tile(g, L + i * (tw3 + 4), tw3, t, sb, c));
+  y += 50;
+  if (GRUPPEN.filter(([g]) => g.kosten > 0).length > 1) {
+    d.wrap("Getrennte Förderbereiche mit eigenem Antrag bzw. eigener Förderung. Nur wenn alles umgesetzt wird: Kosten " + eur(r.kosten) + " · Zuschuss " + eur(r.zuschuss) + " · Eigenanteil " + eur(r.eigen) + ".", W, 8.5).forEach(l => { d.text(l, L, y, { size: 8.5, color: C.muted }); y += 4; });
     y += 4;
   } else y += 2;
 
@@ -376,7 +389,7 @@ function foerderPdf(r, s, logo) {
   };
   const all = r.pos.filter(p => p.kosten > 0), max = Math.max(...all.map(p => p.zuschuss), 1);
   if (!all.length) { thead(); y += 5; d.text("Noch keine Kosten eingetragen.", cols[0], y, { size: 10, color: C.muted }); y += 9; }
-  for (const [g, titel] of [[r.kfw, "KfW – Heizungstausch (Antrag bei der KfW)"], [r.bafa, "BAFA – Gebäudehülle, Baubegleitung, Energieberatung (Antrag beim BAFA)"]]) {
+  for (const [g, titel, st] of [[r.kfw, "KfW – Heizungstausch (Antrag bei der KfW)", "KfW"], [r.em, "BAFA – Einzelmaßnahmen an der Gebäudehülle (Antrag beim BAFA)", "BAFA-Einzelmaßnahmen"], [r.eb, "Energieberatung & Fachplanung (Förderung über das BAFA)", "Energieberatung & Fachplanung"]]) {
     const rows = g.pos.filter(p => p.kosten > 0); if (!rows.length) continue;
     need(30); d.text(titel, L, y, { size: 10.5, bold: true, color: C.green }); y += 6; thead();
     for (const p of rows) {
@@ -389,11 +402,12 @@ function foerderPdf(r, s, logo) {
       y += 3.6;
     }
     need(14); d.line(L, y, R, y, C.ink, .8); y += 6;
-    const st = g === r.kfw ? "KfW" : "BAFA";
     d.text("Summe " + st, cols[0], y, { size: 10, bold: true }); d.text(eur(g.kosten), cols[1], y, { size: 10, bold: true, align: "right" });
     d.text(eur(g.foerderf), cols[2], y, { size: 10, align: "right" }); d.text(pz(g.satz), cols[3], y, { size: 10, bold: true, align: "right" });
     d.text(eur(g.zuschuss), cols[4], y, { size: 10, bold: true, align: "right", color: C.green }); y += 5;
-    d.text("Eigenanteil " + st + ": " + eur(g.eigen) + " · Förderquote auf die Kosten: " + pz(g.quote), cols[0], y, { size: 8.5, color: C.muted }); y += 10;
+    d.text("Eigenanteil " + st + ": " + eur(g.eigen) + " · Förderquote auf die Kosten: " + pz(g.quote), cols[0], y, { size: 8.5, color: C.muted }); y += 4.5;
+    if (g === r.eb) d.wrap("iSFP (individueller Sanierungsfahrplan): 50 % des Honorars, max. 650 € (Ein-/Zweifamilienhaus) bzw. 850 € · Fachplanung & Baubegleitung durch den Energieberater: 50 %", W - 4, 8.5).forEach(l => { d.text(l, cols[0], y, { size: 8.5, color: C.muted }); y += 4; });
+    y += 5.5;
   }
 
   // Fördersatz Heizung
@@ -460,7 +474,7 @@ const SCHEMA = [
     { id: "datum", label: "Antragsdatum", hint: "bestimmt Klimabonus und Höchstgrenze", type: "date" },
     { id: "we", label: "Wohneinheiten im Gebäude", type: "num" },
     { id: "selbst", label: "davon selbst bewohnt", hint: "0 = vermietet", type: "num" },
-    { id: "isfp", label: "Geförderter iSFP liegt vor", type: "yn" } ] },
+    { id: "isfp", label: "Geförderter iSFP liegt vor", type: "yn", info: "isfp" } ] },
   { title: "Heizungstausch", tag: "KfW 458", sub: "Wärmepumpe, Biomasse, Solarthermie oder Netzanschluss.", fields: [
     { id: "heizung", label: "Neue Heizung", type: "sel", opts: ["Wärmepumpe", "Biomasse", "Solarthermie", "Wärmenetz-Anschluss", "Gebäudenetz", "Brennstoffzelle", "Innovative EE-Heizung"] },
     { id: "kostenHeizung", label: "Kosten brutto", hint: "inkl. Einbau, Abgleich, Entsorgung", type: "eur" },
@@ -475,10 +489,10 @@ const SCHEMA = [
     { id: "fenster", label: "Fenster, Türen, Sonnenschutz", type: "eur" },
     { id: "lueftung", label: "Lüftung / Anlagentechnik", type: "eur" },
     { id: "optimierung", label: "Heizungsoptimierung", hint: "hydr. Abgleich, Pumpe, Heizkörper · bis 5 WE", type: "eur" },
-    { id: "wpb", label: "Worst Performing Building", hint: "ab 2027, nur mit iSFP", type: "yn" },
+    { id: "wpb", label: "Worst Performing Building", hint: "ab 2027, nur mit iSFP", type: "yn", info: "wpb" } ] },
+  { title: "Energieberatung & Fachplanung", tag: "BAFA", info: "isfp", sub: "Eigene Förderung: iSFP 50 % des Honorars, max. 650 € (EFH/ZFH) bzw. 850 € · Fachplanung & Baubegleitung durch den Energieberater 50 %.", fields: [
+    { id: "honorar", label: "iSFP-Honorar brutto", hint: "individueller Sanierungsfahrplan", type: "eur", info: "isfp" },
     { id: "baubegleitung", label: "Fachplanung & Baubegleitung", hint: "50 %, nur bei unabhängigem Experten", type: "eur" } ] },
-  { title: "Energieberatung", tag: "iSFP · BAFA", sub: "50 % des Honorars, max. 650 € (EFH/ZFH) bzw. 850 €.", fields: [
-    { id: "honorar", label: "Beratungshonorar brutto", type: "eur" } ] },
 ];
 const today = new Date().toISOString().slice(0, 10);
 const EMPTY = { kunde: "", datum: today, we: 1, selbst: 1, isfp: false, heizung: "Wärmepumpe", kostenHeizung: "", altHeizung: "Gas", altBaujahr: "", funktioniert: true,
@@ -487,15 +501,29 @@ const SAMPLE = { ...EMPTY, kunde: "Familie Muster, Hauptstraße 1", isfp: true, 
 let state = { ...SAMPLE }, isSample = true;
 try { const s = JSON.parse(localStorage.getItem("kron-rechner") || "null"); if (s) { state = { ...EMPTY, ...s.v, datum: s.v.datum || today }; isSample = !!s.sample; } } catch (e) {}
 
+const INFO = {
+  isfp: { t: "iSFP – individueller Sanierungsfahrplan", b: ["Bei einer Vor-Ort-Beratung nimmt ein Energieberater Ihr Haus auf und erstellt einen Fahrplan: welche Sanierungsschritte sinnvoll sind und in welcher Reihenfolge.",
+    "Mit iSFP sind bei Maßnahmen an der Gebäudehülle mehr Kosten förderfähig und es gibt einen Bonus von 5 %. Die Beratung selbst wird mit 50 % gefördert (max. 650 € beim Ein-/Zweifamilienhaus, 850 € ab 3 Wohneinheiten).",
+    "Am besten einen Termin zur Vor-Ort-Beratung mit Ihrem Energieberater vereinbaren."] },
+  wpb: { t: "Worst Performing Building (WPB)", b: ["So werden die energetisch schlechtesten Gebäude im Bestand bezeichnet – also Häuser mit sehr hohem Energieverbrauch.",
+    "Relevant ab 2027: Dann gibt es dafür voraussichtlich einen zusätzlichen Bonus von 5 % auf die Dämmung – nur zusammen mit einem iSFP.",
+    "Ob Ihr Haus dazu zählt, kann am besten ein Energieberater beurteilen."] },
+};
+function infoBtn(k) { return '<button type="button" class="info" data-info="' + k + '" aria-label="Erklärung anzeigen">?</button>'; }
+const pop = document.getElementById("infopop");
+function openInfo(k) { const i = INFO[k]; if (!i) return; document.getElementById("ip-t").textContent = i.t; document.getElementById("ip-b").innerHTML = i.b.map(x => "<p>" + x + "</p>").join(""); pop.hidden = false; pop.querySelector(".ipx").focus(); }
+function closeInfo() { pop.hidden = true; }
+document.addEventListener("click", e => { const b = e.target.closest(".info"); if (b) { e.preventDefault(); e.stopPropagation(); openInfo(b.dataset.info); return; } if (!pop.hidden && (e.target === pop || e.target.closest(".ipx"))) closeInfo(); }, true);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !pop.hidden) closeInfo(); });
 const forms = document.getElementById("forms");
 function build() {
   forms.innerHTML = "";
   for (const sec of SCHEMA) {
     const p = document.createElement("section"); p.className = "panel";
-    p.innerHTML = '<h2>' + sec.title + ' <span class="tag">' + sec.tag + '</span></h2><p class="sub">' + sec.sub + '</p>';
+    p.innerHTML = '<h2>' + sec.title + ' <span class="tag">' + sec.tag + '</span>' + (sec.info ? infoBtn(sec.info) : '') + '</h2><p class="sub">' + sec.sub + '</p>';
     for (const f of sec.fields) {
       const r = document.createElement("div"); r.className = "row";
-      const lab = '<' + (f.type === "yn" ? 'span class="lbl" id="l-' + f.id + '"' : 'label for="' + f.id + '"') + '>' + f.label + (f.hint ? '<small>' + f.hint + '</small>' : '') + '</' + (f.type === "yn" ? 'span' : 'label') + '>';
+      const lab = '<' + (f.type === "yn" ? 'span class="lbl" id="l-' + f.id + '"' : 'label for="' + f.id + '"') + '>' + f.label + (f.info ? infoBtn(f.info) : '') + (f.hint ? '<small>' + f.hint + '</small>' : '') + '</' + (f.type === "yn" ? 'span' : 'label') + '>';
       let ctl = "";
       if (f.type === "yn") ctl = '<div class="seg" role="group" aria-labelledby="l-' + f.id + '"><button type="button" data-f="' + f.id + '" data-v="1">ja</button><button type="button" data-f="' + f.id + '" data-v="0">nein</button></div>';
       else if (f.type === "sel") ctl = '<select id="' + f.id + '">' + f.opts.map(o => '<option>' + o + '</option>').join("") + '</select>';
@@ -540,16 +568,17 @@ function render() {
   document.getElementById("stack").innerHTML = html;
   document.getElementById("legend").innerHTML = parts.map(([n, v, c]) => '<span><i class="sw" style="background:' + c + '"></i>' + n + ' <em>' + pct(v) + '</em></span>').join("") +
     '<span>Ergebnis <em>' + pct(h.satzSelbst) + '</em></span><span>Höchstgrenze <em>' + eur(h.hg) + '</em></span>' + (h.anteil < 1 ? '<span>Boni auf ' + pct(h.anteil) + ' der Kosten</span>' : '');
-  const prog = (g, name, sub, col) => {
+  const prog = (g, name, sub, col, note) => {
     const on = g.kosten > 0;
     return '<div class="prog' + (on ? '' : ' off') + '" style="--pc:' + col + '"><div class="ph"><b>' + name + '</b><span>' + sub + '</span></div>' +
       '<div class="amt">' + (on ? eur(g.zuschuss) : '–') + '</div>' +
       '<div class="rate">' + (on ? 'Fördersatz ' + pz(g.satz) : 'keine Kosten eingetragen') + '</div>' +
       (on ? '<dl><dt>Kosten</dt><dd>' + eur(g.kosten) + '</dd><dt>förderfähig</dt><dd>' + eur(g.foerderf) + '</dd><dt>Eigenanteil</dt><dd>' + eur(g.eigen) + '</dd><dt>Quote auf Kosten</dt><dd>' + pz(g.quote) + '</dd></dl>' +
-        (g.pos.filter(p => p.kosten > 0).length > 1 ? '<div class="items">' + g.pos.filter(p => p.kosten > 0).map(p => '<div><span>' + p.name + ' · ' + pz(p.satz) + '</span><span>' + eur(p.zuschuss) + '</span></div>').join("") + '</div>' : '') : '') + '</div>';
+        (g.pos.filter(p => p.kosten > 0).length > 1 ? '<div class="items">' + g.pos.filter(p => p.kosten > 0).map(p => '<div><span>' + p.name + ' · ' + pz(p.satz) + '</span><span>' + eur(p.zuschuss) + '</span></div>').join("") + '</div>' : '') : '') + (note ? '<div class="pnote">' + note + '</div>' : '') + '</div>';
   };
-  document.getElementById("split").innerHTML = prog(r.kfw, "KfW", "Heizungstausch", "var(--e1)") + prog(r.bafa, "BAFA", "Hülle · Baubegleitung · iSFP", "var(--e5)");
-  document.getElementById("m-split").textContent = "KfW " + eur(r.kfw.zuschuss) + " · BAFA " + eur(r.bafa.zuschuss);
+  document.getElementById("split").innerHTML = prog(r.kfw, "KfW", "Heizungstausch", "var(--e1)") + prog(r.em, "BAFA", "Einzelmaßnahmen Hülle", "var(--e2)") +
+    prog(r.eb, "Beratung", "Energieberatung & Fachplanung", "var(--e5)", 'iSFP' + infoBtn("isfp") + ': 50 %, max. 650 € (EFH/ZFH) bzw. 850 €<br>Fachplanung &amp; Baubegleitung: 50 %');
+  document.getElementById("m-split").textContent = "KfW " + eur(r.kfw.zuschuss) + " · BAFA " + eur(r.em.zuschuss) + " · Beratung " + eur(r.eb.zuschuss);
   document.getElementById("hints").innerHTML = r.hinweise.length ? r.hinweise.map(t => '<div class="hint">' + t + '</div>').join("") : '<p class="ok">Keine Auffälligkeiten.</p>';
   window._last = r;
 }
