@@ -95,9 +95,25 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .note{color:var(--muted);font-size:12.5px;margin:0}
 .example{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
 textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){.split{grid-template-columns:1fr}}
+.prog{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--surface-2);border-top:5px solid var(--pc)}
+.prog.off{opacity:.55}
+.prog .ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.prog .ph b{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.02em}
+.prog .ph span{font-size:12px;color:var(--muted)}
+.prog .amt{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.05;color:var(--accent-ink);font-variant-numeric:tabular-nums;margin:6px 0 2px}
+.prog .rate{font-size:14px;font-weight:600;margin-bottom:8px}
+.prog dl{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:0;font-size:13.5px;font-variant-numeric:tabular-nums}
+.prog dt{color:var(--muted)}.prog dd{margin:0;text-align:right;font-weight:600}
+.prog .items{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);display:grid;gap:2px}
+.prog .items div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.prog .items span:last-child{white-space:nowrap;font-weight:600;color:var(--ink)}
+.splitnote{margin:10px 0 0;color:var(--muted);font-size:12.5px}
 .minibar{display:none}
 @media (max-width:860px){.minibar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;
   background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 14px rgba(0,0,0,.08)}
+ .minibar #m-split{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
  .minibar b{font-family:var(--display);font-size:26px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
  .minibar a{font-weight:600;color:var(--accent-ink);text-decoration:none}
  .wrap{padding-bottom:90px}}
@@ -122,7 +138,7 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
 
     <aside class="result" id="ergebnis" aria-live="polite">
       <div class="total">
-        <div class="k">Voraussichtlicher Zuschuss <span class="example" id="exbadge">Beispielwerte</span></div>
+        <div class="k">Zuschuss gesamt (KfW + BAFA) <span class="example" id="exbadge">Beispielwerte</span></div>
         <div class="big" id="t-total">–</div>
         <div class="meta"><span>Kosten <b id="t-kosten">–</b></span><span>Eigenanteil <b id="t-eigen">–</b></span><span>Quote <b id="t-quote">–</b></span></div>
         <div class="label" id="label"></div>
@@ -135,6 +151,11 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
       <div class="card">
         <h3>Hinweise</h3>
         <div class="hints" id="hints"></div>
+      </div>
+      <div class="card" id="splitcard">
+        <h3>KfW und BAFA getrennt</h3>
+        <div class="split" id="split"></div>
+        <p class="splitnote">Zwei getrennte Förderprogramme mit eigenem Antrag. Wird nur eine Maßnahme umgesetzt, gilt nur deren Spalte.</p>
       </div>
       <div class="card">
         <div class="actions">
@@ -149,7 +170,7 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
   </div>
 </div>
 <footer class="foot"><b>Kron Energieberatung</b> · Yannick Kron · Wiesgarten 1 · 97450 Arnstein · 0151 11541830 · info@energieberatung-kron.de<br>Datenschutz: Alle Eingaben bleiben auf diesem Gerät gespeichert und werden nicht übertragen. Diese Seite lädt keine externen Inhalte.</footer>
-<div class="minibar"><span>Zuschuss <b id="m-total">–</b></span><a href="#ergebnis">Details ansehen</a></div>
+<div class="minibar"><span id="m-split"></span><span>Zuschuss <b id="m-total">–</b></span><a href="#ergebnis">Details ansehen</a></div>
 <script>
 // Förderlogik BEG EM (Richtlinie 17.08.2026) – wird in die Seite eingebettet
 const P = {
@@ -217,11 +238,17 @@ function berechne(i) {
     { key: "baubegl", name: "Fachplanung & Baubegleitung", stelle: "BAFA", kosten: kb, foerderf: Math.min(kb, deckelB), zuschuss: zB },
     { key: "isfp", name: "Energieberatung (iSFP)", stelle: "BAFA", kosten: ke, foerderf: ke, zuschuss: zE },
   ];
+  const std = { heizung: satzSelbst, huelle: P.huelle, baubegl: P.baubegl, isfp: P.ebw };
+  for (const p of pos) p.satz = p.foerderf > 0 ? p.zuschuss / p.foerderf : std[p.key];
+  const grp = st => { const ps = pos.filter(p => p.stelle === st), k = ps.reduce((a, p) => a + p.kosten, 0), f = ps.reduce((a, p) => a + p.foerderf, 0), z = ps.reduce((a, p) => a + p.zuschuss, 0);
+    return { pos: ps, kosten: k, foerderf: f, zuschuss: z, eigen: k - z, quote: k ? z / k : 0, satz: f ? z / f : 0 }; };
+  const kfw = grp("KfW"), bafa = grp("BAFA");
   const kosten = pos.reduce((a, p) => a + p.kosten, 0), zuschuss = pos.reduce((a, p) => a + p.zuschuss, 0);
-  return { pos, kosten, zuschuss, eigen: kosten - zuschuss, heiz: { grund, klima, eink, cap, satzSelbst, hg, anteil, wp, ab2027 },
+  return { pos, kfw, bafa, kosten, zuschuss, eigen: kosten - zuschuss, heiz: { grund, klima, eink, cap, satzSelbst, hg, anteil, wp, ab2027 },
            huelle: { hgO, hgM, isfpOk, zIsfp, zWpb }, hinweise };
 }
 function eur(x) { return Math.round(x).toLocaleString("de-DE") + " €"; }
+function pz(x) { return (Math.round(x * 1000) / 10).toLocaleString("de-DE") + " %"; }
 
 const HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500];
 const HWB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556];
@@ -292,6 +319,11 @@ const SCHRITTE = [
   "Umsetzung durch den Fachbetrieb; danach Nachweise und Rechnungen einreichen, Auszahlung des Zuschusses.",
 ];
 
+const KFW_VORAB = [
+  "Heizlastberechnung erstellen lassen – am besten von einem Energieberater. Sie zeigt, wie groß die Leistung der Wärmepumpe (bzw. der neuen Heizung) sein muss.",
+  "Erst mit der berechneten Heizlast Angebote bei Fachbetrieben einholen – so sind die Angebote vergleichbar und die Anlage wird weder zu groß noch zu klein ausgelegt.",
+];
+
 function foerderPdf(r, s, logo) {
   const d = new Pdf(), L = 18, R = 192, W = R - L, fmtD = x => x ? x.split("-").reverse().join(".") : "";
   const pct = x => Math.round(x * 100) + " %";
@@ -314,35 +346,55 @@ function foerderPdf(r, s, logo) {
   d.text("Ihre voraussichtliche Förderung", L, y, { size: 19, bold: true }); y += 6.5;
   d.text("Unverbindliche Schätzung nach BEG-EM-Richtlinie vom 17.08.2026 · Antragsdatum " + fmtD(s.datum), L, y, { size: 9, color: C.muted }); y += 7;
 
-  // Kennzahlen
-  d.rect(L, y, W, 25, C.soft); d.rect(L, y, 1.6, 25, C.green);
-  d.text("Voraussichtlicher Zuschuss", L + 7, y + 7.5, { size: 9, color: C.muted });
-  d.text(eur(r.zuschuss), L + 7, y + 19, { size: 26, bold: true, color: C.green });
-  [["Gesamtkosten", eur(r.kosten)], ["Eigenanteil", eur(r.eigen)], ["Förderquote", r.kosten ? pct(r.zuschuss / r.kosten) : "–"]].forEach(([k, v], i) => {
-    const x = L + 98 + i * 28.5; d.text(k, x, y + 9.5, { size: 8, color: C.muted }); d.text(v, x, y + 16.5, { size: 11, bold: true });
-  });
-  y += 33;
+  // Kennzahlen: KfW und BAFA getrennt
+  const tile = (g, x, w, titel, sub, col) => {
+    const on = g.kosten > 0, th = 38;
+    d.rect(x, y, w, th, C.soft); d.rect(x, y, w, 1.6, col);
+    d.text(titel, x + 5, y + 8.5, { size: 13, bold: true }); d.text(sub, x + 5 + tw(titel, 13, true) / MM + 2.5, y + 8.5, { size: 8.5, color: C.muted });
+    if (!on) { d.text("Keine Maßnahme geplant", x + 5, y + 20, { size: 11, color: C.muted }); return; }
+    d.text("Voraussichtlicher Zuschuss", x + 5, y + 14.5, { size: 8, color: C.muted });
+    d.text(eur(g.zuschuss), x + 5, y + 24, { size: 20, bold: true, color: C.green });
+    d.text("Fördersatz " + pz(g.satz), x + w - 5, y + 24, { size: 11, bold: true, align: "right" });
+    d.text("Kosten " + eur(g.kosten) + "  ·  Eigenanteil " + eur(g.eigen) + "  ·  Quote " + pz(g.quote), x + 5, y + 32.5, { size: 8.5, color: C.muted });
+  };
+  const tw2 = (W - 6) / 2;
+  tile(r.kfw, L, tw2, "KfW", "Heizungstausch", C.e[0]);
+  tile(r.bafa, L + tw2 + 6, tw2, "BAFA", "Hülle · Baubegleitung · iSFP", C.e[4]);
+  y += 44;
+  if (r.kfw.kosten > 0 && r.bafa.kosten > 0) {
+    d.wrap("Zwei getrennte Förderprogramme mit eigenem Antrag. Nur wenn beide umgesetzt werden: Kosten " + eur(r.kosten) + " · Zuschuss " + eur(r.zuschuss) + " · Eigenanteil " + eur(r.eigen) + ".", W, 8.5).forEach(l => { d.text(l, L, y, { size: 8.5, color: C.muted }); y += 4; });
+    y += 4;
+  } else y += 2;
 
   // Maßnahmen
   h2("Maßnahmen im Überblick");
-  const cols = [L + 4, R - 78, R - 50, R];
-  d.text("Maßnahme", cols[0], y, { size: 8, bold: true, color: C.muted }); d.text("Kosten", cols[1], y, { size: 8, bold: true, color: C.muted, align: "right" });
-  d.text("förderfähig", cols[2], y, { size: 8, bold: true, color: C.muted, align: "right" }); d.text("Zuschuss", cols[3], y, { size: 8, bold: true, color: C.muted, align: "right" });
-  y += 3;
-  const rows = r.pos.filter(p => p.kosten > 0), max = Math.max(...rows.map(p => p.zuschuss), 1);
-  for (const p of rows) {
-    need(12); d.line(L, y, R, y, C.line, .4); y += 5.5;
-    d.rect(L, y - 3.6, 1.6, 9, PCOL[p.key]);
-    d.text(p.name, cols[0], y, { size: 10, bold: true }); d.text(p.stelle, cols[0] + tw(p.name, 10, true) / MM + 2, y, { size: 8, color: C.muted });
-    d.text(eur(p.kosten), cols[1], y, { size: 10, align: "right" }); d.text(eur(p.foerderf), cols[2], y, { size: 10, align: "right" });
-    d.text(eur(p.zuschuss), cols[3], y, { size: 10, bold: true, align: "right" });
-    y += 2.6; d.rect(cols[0], y, 70, 1.6, "#edf1ee"); d.rect(cols[0], y, Math.max(.6, 70 * p.zuschuss / max), 1.6, PCOL[p.key]);
-    y += 3.6;
+  const cols = [L + 4, R - 88, R - 62, R - 36, R];
+  const thead = () => {
+    d.text("Maßnahme", cols[0], y, { size: 8, bold: true, color: C.muted }); d.text("Kosten", cols[1], y, { size: 8, bold: true, color: C.muted, align: "right" });
+    d.text("förderfähig", cols[2], y, { size: 8, bold: true, color: C.muted, align: "right" }); d.text("Fördersatz", cols[3], y, { size: 8, bold: true, color: C.muted, align: "right" });
+    d.text("Zuschuss", cols[4], y, { size: 8, bold: true, color: C.muted, align: "right" }); y += 3;
+  };
+  const all = r.pos.filter(p => p.kosten > 0), max = Math.max(...all.map(p => p.zuschuss), 1);
+  if (!all.length) { thead(); y += 5; d.text("Noch keine Kosten eingetragen.", cols[0], y, { size: 10, color: C.muted }); y += 9; }
+  for (const [g, titel] of [[r.kfw, "KfW – Heizungstausch (Antrag bei der KfW)"], [r.bafa, "BAFA – Gebäudehülle, Baubegleitung, Energieberatung (Antrag beim BAFA)"]]) {
+    const rows = g.pos.filter(p => p.kosten > 0); if (!rows.length) continue;
+    need(30); d.text(titel, L, y, { size: 10.5, bold: true, color: C.green }); y += 6; thead();
+    for (const p of rows) {
+      need(12); d.line(L, y, R, y, C.line, .4); y += 5.5;
+      d.rect(L, y - 3.6, 1.6, 9, PCOL[p.key]);
+      d.text(p.name, cols[0], y, { size: 10, bold: true });
+      d.text(eur(p.kosten), cols[1], y, { size: 10, align: "right" }); d.text(eur(p.foerderf), cols[2], y, { size: 10, align: "right" });
+      d.text(pz(p.satz), cols[3], y, { size: 10, align: "right" }); d.text(eur(p.zuschuss), cols[4], y, { size: 10, bold: true, align: "right" });
+      y += 2.6; d.rect(cols[0], y, 60, 1.6, "#edf1ee"); d.rect(cols[0], y, Math.max(.6, 60 * p.zuschuss / max), 1.6, PCOL[p.key]);
+      y += 3.6;
+    }
+    need(14); d.line(L, y, R, y, C.ink, .8); y += 6;
+    const st = g === r.kfw ? "KfW" : "BAFA";
+    d.text("Summe " + st, cols[0], y, { size: 10, bold: true }); d.text(eur(g.kosten), cols[1], y, { size: 10, bold: true, align: "right" });
+    d.text(eur(g.foerderf), cols[2], y, { size: 10, align: "right" }); d.text(pz(g.satz), cols[3], y, { size: 10, bold: true, align: "right" });
+    d.text(eur(g.zuschuss), cols[4], y, { size: 10, bold: true, align: "right", color: C.green }); y += 5;
+    d.text("Eigenanteil " + st + ": " + eur(g.eigen) + " · Förderquote auf die Kosten: " + pz(g.quote), cols[0], y, { size: 8.5, color: C.muted }); y += 10;
   }
-  if (!rows.length) { y += 5; d.text("Noch keine Kosten eingetragen.", cols[0], y, { size: 10, color: C.muted }); y += 4; }
-  d.line(L, y, R, y, C.ink, .8); y += 6;
-  d.text("Summe", cols[0], y, { size: 10, bold: true }); d.text(eur(r.kosten), cols[1], y, { size: 10, bold: true, align: "right" });
-  d.text(eur(r.zuschuss), cols[3], y, { size: 10, bold: true, align: "right", color: C.green }); y += 9;
 
   // Fördersatz Heizung
   const h = r.heiz;
@@ -358,6 +410,17 @@ function foerderPdf(r, s, logo) {
     y += 6;
     d.text("Fördersatz " + pct(h.satzSelbst) + (h.anteil < 1 ? " (Boni anteilig für " + pct(h.anteil) + " der Kosten, selbst bewohnte Einheiten)" : "") + " · Höchstgrenze förderfähige Kosten " + eur(h.hg), L, y, { size: 8.5, color: C.muted });
     y += 8;
+  }
+
+  // KfW: vor dem Angebot
+  if (r.kfw.kosten > 0) {
+    h2("KfW-Förderung Heizung: vor dem Einholen der Angebote");
+    KFW_VORAB.forEach((t, i) => {
+      const ls = d.wrap(t, W - 10, 9.5); need(ls.length * 4.6 + 3);
+      d.rect(L, y - 3.6, 5, 5, C.e[0]); d.text(String.fromCharCode(65 + i), L + 2.5, y, { size: 8.5, bold: true, color: "#ffffff", align: "center" });
+      ls.forEach(l => { d.text(l, L + 8, y, { size: 9.5 }); y += 4.6; }); y += 1.8;
+    });
+    y += 3;
   }
 
   // Hinweise
@@ -477,6 +540,16 @@ function render() {
   document.getElementById("stack").innerHTML = html;
   document.getElementById("legend").innerHTML = parts.map(([n, v, c]) => '<span><i class="sw" style="background:' + c + '"></i>' + n + ' <em>' + pct(v) + '</em></span>').join("") +
     '<span>Ergebnis <em>' + pct(h.satzSelbst) + '</em></span><span>Höchstgrenze <em>' + eur(h.hg) + '</em></span>' + (h.anteil < 1 ? '<span>Boni auf ' + pct(h.anteil) + ' der Kosten</span>' : '');
+  const prog = (g, name, sub, col) => {
+    const on = g.kosten > 0;
+    return '<div class="prog' + (on ? '' : ' off') + '" style="--pc:' + col + '"><div class="ph"><b>' + name + '</b><span>' + sub + '</span></div>' +
+      '<div class="amt">' + (on ? eur(g.zuschuss) : '–') + '</div>' +
+      '<div class="rate">' + (on ? 'Fördersatz ' + pz(g.satz) : 'keine Kosten eingetragen') + '</div>' +
+      (on ? '<dl><dt>Kosten</dt><dd>' + eur(g.kosten) + '</dd><dt>förderfähig</dt><dd>' + eur(g.foerderf) + '</dd><dt>Eigenanteil</dt><dd>' + eur(g.eigen) + '</dd><dt>Quote auf Kosten</dt><dd>' + pz(g.quote) + '</dd></dl>' +
+        (g.pos.filter(p => p.kosten > 0).length > 1 ? '<div class="items">' + g.pos.filter(p => p.kosten > 0).map(p => '<div><span>' + p.name + ' · ' + pz(p.satz) + '</span><span>' + eur(p.zuschuss) + '</span></div>').join("") + '</div>' : '') : '') + '</div>';
+  };
+  document.getElementById("split").innerHTML = prog(r.kfw, "KfW", "Heizungstausch", "var(--e1)") + prog(r.bafa, "BAFA", "Hülle · Baubegleitung · iSFP", "var(--e5)");
+  document.getElementById("m-split").textContent = "KfW " + eur(r.kfw.zuschuss) + " · BAFA " + eur(r.bafa.zuschuss);
   document.getElementById("hints").innerHTML = r.hinweise.length ? r.hinweise.map(t => '<div class="hint">' + t + '</div>').join("") : '<p class="ok">Keine Auffälligkeiten.</p>';
   window._last = r;
 }
