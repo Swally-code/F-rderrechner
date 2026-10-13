@@ -29,6 +29,7 @@
   --bg:#161a17; --surface:#1f2420; --surface-2:#262c27; --ink:#eef1ec; --muted:#a6b0a5; --line:#343c35;
   --accent:#3cc366; --accent-ink:#7be09a; --accent-soft:#1d3a26; --warn-bg:#3a2c16; --warn-ink:#f2c27a; --focus:#7aa7ff; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:20px 48px}
 header.top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
@@ -119,6 +120,22 @@ textarea#copytext{width:100%;min-height:120px;font:13px/1.4 var(--body);backgrou
 #infopop h4{font-family:var(--display);font-size:22px;margin:0 30px 8px 0;line-height:1.15}
 #infopop p{margin:0 0 8px;font-size:15px;line-height:1.5}
 #infopop .ipx{position:absolute;top:8px;right:10px;border:0;background:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;padding:4px}
+.plan{background:var(--surface);border:2px solid var(--accent);border-radius:var(--r);padding:18px}
+.plan h2{font-family:var(--display);font-weight:700;font-size:26px;margin:0 0 2px}
+.plan .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.choices{grid-template-columns:1fr}}
+.choice{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;font:inherit;color:var(--ink);background:var(--surface-2);border:2px solid var(--line);border-radius:10px;padding:12px 12px 12px;cursor:pointer;transition:border-color .15s,background .15s}
+@media (max-width:560px){.choice{flex-direction:row;align-items:center;gap:12px}}
+.choice svg{width:40px;height:40px;color:var(--cc);flex:none}
+.choice b{font-family:var(--display);font-size:19px;line-height:1.1;display:block;hyphens:manual;overflow-wrap:anywhere}
+.choice small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;margin-top:2px}
+.choice .tagline{display:inline-block;margin-top:6px;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--cc)}
+.choice .tick{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
+.choice[aria-pressed="true"]{border-color:var(--cc);background:var(--surface)}
+.choice[aria-pressed="true"] .tick{background:var(--cc);border-color:var(--cc)}
+.choice .info{position:absolute;bottom:8px;right:8px}
+.plan .nohint{margin:12px 0 0;font-weight:600;color:var(--warn-ink);background:var(--warn-bg);border-radius:8px;padding:9px 12px}
 .minibar{display:none}
 @media (max-width:860px){.minibar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;
   background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 14px rgba(0,0,0,.08)}
@@ -475,7 +492,7 @@ const SCHEMA = [
     { id: "we", label: "Wohneinheiten im Gebäude", type: "num" },
     { id: "selbst", label: "davon selbst bewohnt", hint: "0 = vermietet", type: "num" },
     { id: "isfp", label: "Geförderter iSFP liegt vor", type: "yn", info: "isfp" } ] },
-  { title: "Heizungstausch", tag: "KfW 458", sub: "Wärmepumpe, Biomasse, Solarthermie oder Netzanschluss.", fields: [
+  { grp: "planKfw", title: "Heizungstausch", tag: "KfW 458", sub: "Wärmepumpe, Biomasse, Solarthermie oder Netzanschluss.", fields: [
     { id: "heizung", label: "Neue Heizung", type: "sel", opts: ["Wärmepumpe", "Biomasse", "Solarthermie", "Wärmenetz-Anschluss", "Gebäudenetz", "Brennstoffzelle", "Innovative EE-Heizung"] },
     { id: "kostenHeizung", label: "Kosten brutto", hint: "inkl. Einbau, Abgleich, Entsorgung", type: "eur" },
     { id: "altHeizung", label: "Alte Heizung", type: "sel", opts: ["Gas", "Öl", "Gasetagenheizung", "Nachtspeicher", "Kohle", "Biomasse", "andere", "keine"] },
@@ -484,19 +501,19 @@ const SCHEMA = [
     { id: "zve", label: "Haushaltseinkommen (zvE, Ø)", hint: "leer = kein Einkommens-Bonus", type: "eur" },
     { id: "kind", label: "Kind unter 18 im Haushalt", hint: "zvE minus 10.000 €", type: "yn" },
     { id: "euWP", label: "Wärmepumpe aus EU-Herstellung", hint: "erst ab 2027 relevant", type: "yn" } ] },
-  { title: "Gebäudehülle & Anlagentechnik", tag: "BAFA", sub: "Je Kalenderjahr gedeckelt. iSFP-Bonus nur bei Bündelung über der Grenze.", fields: [
+  { grp: "planEm", title: "Gebäudehülle & Anlagentechnik", tag: "BAFA", sub: "Je Kalenderjahr gedeckelt. iSFP-Bonus nur bei Bündelung über der Grenze.", fields: [
     { id: "daemmung", label: "Dämmung", hint: "Wand, Dach, Decke, Boden", type: "eur" },
     { id: "fenster", label: "Fenster, Türen, Sonnenschutz", type: "eur" },
     { id: "lueftung", label: "Lüftung / Anlagentechnik", type: "eur" },
     { id: "optimierung", label: "Heizungsoptimierung", hint: "hydr. Abgleich, Pumpe, Heizkörper · bis 5 WE", type: "eur" },
     { id: "wpb", label: "Worst Performing Building", hint: "ab 2027, nur mit iSFP", type: "yn", info: "wpb" } ] },
-  { title: "Energieberatung & Fachplanung", tag: "BAFA", info: "isfp", sub: "Eigene Förderung: iSFP 50 % des Honorars, max. 650 € (EFH/ZFH) bzw. 850 € · Fachplanung & Baubegleitung durch den Energieberater 50 %.", fields: [
+  { grp: "planEb", title: "Energieberatung & Fachplanung", tag: "BAFA", info: "isfp", sub: "Eigene Förderung: iSFP 50 % des Honorars, max. 650 € (EFH/ZFH) bzw. 850 € · Fachplanung & Baubegleitung durch den Energieberater 50 %.", fields: [
     { id: "honorar", label: "iSFP-Honorar brutto", hint: "individueller Sanierungsfahrplan", type: "eur", info: "isfp" },
     { id: "baubegleitung", label: "Fachplanung & Baubegleitung", hint: "50 %, nur bei unabhängigem Experten", type: "eur" } ] },
 ];
 const today = new Date().toISOString().slice(0, 10);
 const EMPTY = { kunde: "", datum: today, we: 1, selbst: 1, isfp: false, heizung: "Wärmepumpe", kostenHeizung: "", altHeizung: "Gas", altBaujahr: "", funktioniert: true,
-  zve: "", kind: false, euWP: false, daemmung: "", fenster: "", lueftung: "", optimierung: "", wpb: false, baubegleitung: "", honorar: "" };
+  zve: "", kind: false, euWP: false, daemmung: "", fenster: "", lueftung: "", optimierung: "", wpb: false, baubegleitung: "", honorar: "", planKfw: true, planEm: true, planEb: true };
 const SAMPLE = { ...EMPTY, kunde: "Familie Muster, Hauptstraße 1", isfp: true, kostenHeizung: 32000, altBaujahr: 2003, zve: 46000, kind: true, daemmung: 24000, fenster: 14000, baubegleitung: 2400, honorar: 1600 };
 let state = { ...SAMPLE }, isSample = true;
 try { const s = JSON.parse(localStorage.getItem("kron-rechner") || "null"); if (s) { state = { ...EMPTY, ...s.v, datum: s.v.datum || today }; isSample = !!s.sample; } } catch (e) {}
@@ -516,10 +533,23 @@ function closeInfo() { pop.hidden = true; }
 document.addEventListener("click", e => { const b = e.target.closest(".info"); if (b) { e.preventDefault(); e.stopPropagation(); openInfo(b.dataset.info); return; } if (!pop.hidden && (e.target === pop || e.target.closest(".ipx"))) closeInfo(); }, true);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !pop.hidden) closeInfo(); });
 const forms = document.getElementById("forms");
+const PLAN = [
+  { k: "planKfw", c: "var(--e1)", t: "Heizung tauschen", d: "z. B. Wärmepumpe statt Öl- oder Gasheizung", z: "KfW-Zuschuss 30 – 70 %", i: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 22 24 8l18 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M10 20v20h28V20" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 36c-4 0-6-3-6-6 0-4 4-6 3-10 4 2 9 6 9 10 0 3-2 6-6 6z" fill="currentColor"/></svg>' },
+  { k: "planEm", c: "var(--e2)", t: "Dämmen & Fenster", d: "Dach, Fassade, Fenster, Türen, Lüftung", z: "BAFA-Zuschuss ab 15 %", i: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 22 24 8l18 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M10 20v20h28V20" fill="none" stroke="currentColor" stroke-width="3"/><rect x="16" y="24" width="16" height="10" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M24 24v10M16 29h16" stroke="currentColor" stroke-width="2"/><path d="M3 20 24 4l21 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity=".7"/></svg>' },
+  { k: "planEb", c: "var(--e5)", t: "Sanierungs&shy;fahrplan", d: "Energieberater plant Ihre Sanierung vor Ort (iSFP)", z: "50 % Zuschuss + Bonus", i: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="6" width="26" height="34" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M16 16h14M16 23h14M16 30h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="35" cy="35" r="7" fill="var(--surface)" stroke="currentColor" stroke-width="3"/><path d="m31.5 35 2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>', info: "isfp" },
+];
+const PLANFELDER = { planKfw: ["kostenHeizung"], planEm: ["daemmung", "fenster", "lueftung", "optimierung"], planEb: ["honorar", "baubegleitung"] };
+function eff(s) { const o = { ...s }; for (const [k, fs] of Object.entries(PLANFELDER)) if (s[k] === false) fs.forEach(f => o[f] = ""); return o; }
 function build() {
   forms.innerHTML = "";
+  const pl = document.createElement("section"); pl.className = "plan";
+  pl.innerHTML = '<h2>Was haben Sie vor?</h2><p class="sub">Einfach antippen – mehrere möglich. Danach nur noch die passenden Kosten eintragen.</p><div class="choices">' +
+    PLAN.map(c => '<button type="button" class="choice" data-plan="' + c.k + '" style="--cc:' + c.c + '" aria-pressed="false"><span class="tick">✓</span>' + c.i +
+      '<span><b>' + c.t + '</b><small>' + c.d + '</small><span class="tagline">' + c.z + '</span></span>' + (c.info ? '<span class="info" role="button" tabindex="0" data-info="' + c.info + '" aria-label="Erklärung anzeigen">?</span>' : '') + '</button>').join("") +
+    '</div><p class="nohint" id="nohint" hidden>Bitte oben mindestens einen Punkt auswählen.</p>';
+  forms.appendChild(pl);
   for (const sec of SCHEMA) {
-    const p = document.createElement("section"); p.className = "panel";
+    const p = document.createElement("section"); p.className = "panel"; if (sec.grp) p.dataset.grp = sec.grp;
     p.innerHTML = '<h2>' + sec.title + ' <span class="tag">' + sec.tag + '</span>' + (sec.info ? infoBtn(sec.info) : '') + '</h2><p class="sub">' + sec.sub + '</p>';
     for (const f of sec.fields) {
       const r = document.createElement("div"); r.className = "row";
@@ -536,7 +566,8 @@ function build() {
     forms.appendChild(p);
   }
   forms.addEventListener("input", e => { const t = e.target; if (!t.id) return; state[t.id] = t.value; touched(); });
-  forms.addEventListener("click", e => { const b = e.target.closest("button[data-f]"); if (!b) return; state[b.dataset.f] = b.dataset.v === "1"; touched(); });
+  forms.addEventListener("click", e => { const c = e.target.closest("button[data-plan]"); if (c) { state[c.dataset.plan] = state[c.dataset.plan] === false; touched(); return; }
+    const b = e.target.closest("button[data-f]"); if (!b) return; state[b.dataset.f] = b.dataset.v === "1"; touched(); });
 }
 function fill() {
   for (const [k, v] of Object.entries(state)) {
@@ -550,17 +581,23 @@ function save() { try { localStorage.setItem("kron-rechner", JSON.stringify({ v:
 const pct = x => Math.round(x * 100) + " %";
 const COLORS = { heizung: "var(--e1)", huelle: "var(--e2)", baubegl: "var(--e5)", isfp: "var(--e6)" };
 function render() {
-  const r = berechne({ ...state, datum: state.datum || today });
+  const r = berechne(eff({ ...state, datum: state.datum || today }));
+  let anyPlan = false;
+  for (const c of PLAN) { const on = state[c.k] !== false; anyPlan = anyPlan || on;
+    const b = forms.querySelector('[data-plan="' + c.k + '"]'); if (b) b.setAttribute("aria-pressed", String(on));
+    const sec = forms.querySelector('section[data-grp="' + c.k + '"]'); if (sec) sec.hidden = !on; }
+  document.getElementById("nohint").hidden = anyPlan;
   document.getElementById("exbadge").hidden = !isSample;
   document.getElementById("t-total").textContent = eur(r.zuschuss); document.getElementById("m-total").textContent = eur(r.zuschuss);
   document.getElementById("t-kosten").textContent = eur(r.kosten);
   document.getElementById("t-eigen").textContent = eur(r.eigen);
   document.getElementById("t-quote").textContent = r.kosten ? pct(r.zuschuss / r.kosten) : "–";
   const max = Math.max(...r.pos.map(p => p.zuschuss), 1);
-  document.getElementById("label").innerHTML = r.pos.map(p =>
+  const GK = { kfw: "planKfw", em: "planEm", eb: "planEb" };
+  document.getElementById("label").innerHTML = r.pos.filter(p => state[GK[p.gruppe]] !== false).map(p =>
     '<div class="arrow' + (p.zuschuss ? '' : ' zero') + '"><div class="name">' + p.name + '<small>' + p.stelle + '</small></div><div class="val">' + (p.zuschuss ? eur(p.zuschuss) : '–') + '</div><div class="bar" style="background:' + COLORS[p.key] + ';width:' + Math.max(4, p.zuschuss / max * 100).toFixed(1) + '%"></div></div>').join("");
   const h = r.heiz, card = document.getElementById("satzcard");
-  card.hidden = !(+state.kostenHeizung > 0);
+  card.hidden = !(state.planKfw !== false && +state.kostenHeizung > 0);
   const parts = [["Grundförderung", h.grund, "var(--e1)"], ["Klimabonus", h.klima, "var(--e3)"], ["Einkommens-Bonus", h.eink, "var(--e5)"]];
   let used = 0, html = "";
   for (const [, v, c] of parts) { const w = Math.max(0, Math.min(v, h.cap - used)); used += w; if (w > 0) html += '<i style="width:' + (w * 100) + '%;background:' + c + '"></i>'; }
@@ -576,9 +613,10 @@ function render() {
       (on ? '<dl><dt>Kosten</dt><dd>' + eur(g.kosten) + '</dd><dt>förderfähig</dt><dd>' + eur(g.foerderf) + '</dd><dt>Eigenanteil</dt><dd>' + eur(g.eigen) + '</dd><dt>Quote auf Kosten</dt><dd>' + pz(g.quote) + '</dd></dl>' +
         (g.pos.filter(p => p.kosten > 0).length > 1 ? '<div class="items">' + g.pos.filter(p => p.kosten > 0).map(p => '<div><span>' + p.name + ' · ' + pz(p.satz) + '</span><span>' + eur(p.zuschuss) + '</span></div>').join("") + '</div>' : '') : '') + (note ? '<div class="pnote">' + note + '</div>' : '') + '</div>';
   };
-  document.getElementById("split").innerHTML = prog(r.kfw, "KfW", "Heizungstausch", "var(--e1)") + prog(r.em, "BAFA", "Einzelmaßnahmen Hülle", "var(--e2)") +
-    prog(r.eb, "Beratung", "Energieberatung & Fachplanung", "var(--e5)", 'iSFP' + infoBtn("isfp") + ': 50 %, max. 650 € (EFH/ZFH) bzw. 850 €<br>Fachplanung &amp; Baubegleitung: 50 %');
-  document.getElementById("m-split").textContent = "KfW " + eur(r.kfw.zuschuss) + " · BAFA " + eur(r.em.zuschuss) + " · Beratung " + eur(r.eb.zuschuss);
+  document.getElementById("split").innerHTML = (state.planKfw !== false ? prog(r.kfw, "KfW", "Heizungstausch", "var(--e1)") : '') + (state.planEm !== false ? prog(r.em, "BAFA", "Einzelmaßnahmen Hülle", "var(--e2)") : '') +
+    (state.planEb !== false ? prog(r.eb, "Beratung", "Energieberatung & Fachplanung", "var(--e5)", 'iSFP' + infoBtn("isfp") + ': 50 %, max. 650 € (EFH/ZFH) bzw. 850 €<br>Fachplanung &amp; Baubegleitung: 50 %') : '') ||
+    '<p class="ok">Oben auswählen, was Sie vorhaben.</p>';
+  document.getElementById("m-split").textContent = [[r.kfw, "KfW", "planKfw"], [r.em, "BAFA", "planEm"], [r.eb, "Beratung", "planEb"]].filter(x => state[x[2]] !== false).map(x => x[1] + " " + eur(x[0].zuschuss)).join(" · ");
   document.getElementById("hints").innerHTML = r.hinweise.length ? r.hinweise.map(t => '<div class="hint">' + t + '</div>').join("") : '<p class="ok">Keine Auffälligkeiten.</p>';
   window._last = r;
 }
@@ -606,7 +644,7 @@ document.getElementById("pdf").addEventListener("click", async () => {
   const btn = document.getElementById("pdf"), msg = document.getElementById("pdfmsg");
   btn.disabled = true; msg.textContent = "PDF wird erstellt …";
   try {
-    const s = { ...state, datum: state.datum || today };
+    const s = eff({ ...state, datum: state.datum || today });
     const bytes = foerderPdf(berechne(s), s, await logoJpeg());
     const name = "Foerderuebersicht_" + ((s.kunde || "").replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/Ä/g, "Ae").replace(/Ö/g, "Oe").replace(/Ü/g, "Ue").replace(/ß/g, "ss").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || "Kunde") + "_" + today + ".pdf";
     const blob = new Blob([bytes], { type: "application/pdf" });
@@ -619,7 +657,7 @@ document.getElementById("pdf").addEventListener("click", async () => {
   } catch (e) { msg.textContent = "PDF konnte nicht erstellt werden" + (e && e.message ? ": " + e.message : "."); }
   finally { btn.disabled = false; }
 });
-document.getElementById("reset").addEventListener("click", () => { state = { ...EMPTY }; isSample = false; save(); fill(); render(); });
+document.getElementById("reset").addEventListener("click", () => { state = { ...EMPTY, planKfw: false, planEm: false, planEb: false }; isSample = false; save(); fill(); render(); });
 document.getElementById("sample").addEventListener("click", () => { state = { ...SAMPLE, datum: today }; isSample = true; save(); fill(); render(); });
 build(); fill(); render();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
